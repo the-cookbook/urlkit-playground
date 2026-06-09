@@ -81,7 +81,7 @@ export function formatParamSummary(
   if (!params.length) return "none"
 
   return params.map((param) => (
-    <p className="block py-0.5">
+    <p key={param.name} className="block py-0.5">
       {param.name}:<span className="text-muted-foreground">{param.kind}</span>
       {param.optional && (
         <span className="text-amber-500 dark:text-amber-300">?</span>
@@ -100,7 +100,7 @@ export function formatSearchSummary(
   }
 
   return entries.map(([key, meta]) => (
-    <p className="block py-0.5">
+    <p key={key} className="block py-0.5">
       {key}:{formatFieldSummary(meta)}
     </p>
   ))

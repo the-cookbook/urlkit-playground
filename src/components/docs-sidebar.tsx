@@ -43,7 +43,7 @@ export function DocsSidebar({
       </SidebarHeader>
       <SidebarContent>
         {docsSections.map((section) => (
-          <>
+          <React.Fragment key={section.title}>
             <SidebarGroup className="mb-0">
               <SidebarMenu>
                 <SidebarMenuItem key={section.title}>
@@ -60,7 +60,11 @@ export function DocsSidebar({
                   <div>
                     <div className="mt-3 mb-5 space-y-2">
                       {section.items.map((item) => (
-                        <Accordion type="multiple" className="rounded-md">
+                        <Accordion
+                          key={item.name}
+                          type="multiple"
+                          className="rounded-md"
+                        >
                           <AccordionItem
                             value={item.name}
                             className="bg-background!"
@@ -98,7 +102,7 @@ export function DocsSidebar({
               </SidebarMenu>
             </SidebarGroup>
             <SidebarSeparator className="mt-2 mb-5 w-auto" />
-          </>
+          </React.Fragment>
         ))}
       </SidebarContent>
     </Sidebar>
