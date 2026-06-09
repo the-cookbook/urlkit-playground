@@ -20,6 +20,8 @@ interface ContractEditorProps {
   readonly onReset: () => void
 }
 
+const editorModelUri = monaco.Uri.parse("file:///urlkit-playground.ts")
+
 let hasConfiguredTypeScript = false
 
 function configureTypeScriptDefaults() {
@@ -44,6 +46,7 @@ function configureTypeScriptDefaults() {
     noSyntaxValidation: false,
   })
 
+  typescriptDefaults.setEagerModelSync(false)
   typescriptDefaults.addExtraLib(
     editorTypeDeclarations,
     "file:///urlkit-playground.d.ts"
@@ -62,6 +65,7 @@ export function ContractEditor({
   const editorRef = React.useRef<monaco.editor.IStandaloneCodeEditor | null>(
     null
   )
+  const modelRef = React.useRef<monaco.editor.ITextModel | null>(null)
   const { resolvedTheme } = useTheme()
   const isDirty = value !== initialValue
 
@@ -73,9 +77,15 @@ export function ContractEditor({
       return
     }
 
+    const existingModel = monaco.editor.getModel(editorModelUri)
+    const model =
+      existingModel ??
+      monaco.editor.createModel(value, "typescript", editorModelUri)
+
+    modelRef.current = model
+
     const editor = monaco.editor.create(hostRef.current, {
-      value,
-      language: "typescript",
+      model,
       minimap: { enabled: false },
       fontSize: 13,
       tabSize: 2,
@@ -84,6 +94,18 @@ export function ContractEditor({
       wordWrap: "on",
       lineNumbers: "on",
       theme: resolvedTheme === "dark" ? "vs-dark" : "vs",
+      padding: { top: 20, bottom: 12 },
+      glyphMargin: false,
+      folding: false,
+      links: false,
+      hover: { enabled: false },
+      quickSuggestions: false,
+      suggestOnTriggerCharacters: false,
+      parameterHints: { enabled: false },
+      codeLens: false,
+      colorDecorators: false,
+      selectionHighlight: false,
+      renderValidationDecorations: "off",
     })
 
     editorRef.current = editor
@@ -99,7 +121,9 @@ export function ContractEditor({
     return () => {
       subscription.dispose()
       editor.dispose()
+      model.dispose()
       editorRef.current = null
+      modelRef.current = null
     }
     // The editor is intentionally created once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,13 +134,13 @@ export function ContractEditor({
   }, [resolvedTheme])
 
   React.useEffect(() => {
-    const editor = editorRef.current
+    const model = modelRef.current
 
-    if (!editor || editor.getValue() === value) {
+    if (!model || model.getValue() === value) {
       return
     }
 
-    editor.setValue(value)
+    model.setValue(value)
   }, [value])
 
   return (

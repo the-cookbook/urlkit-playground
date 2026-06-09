@@ -9,7 +9,7 @@ interface CodeBlockProps {
   readonly className?: string
 }
 
-export function CodeBlock({
+export const CodeBlock = React.memo(function CodeBlock({
   code,
   lang = "typescript",
   className = "",
@@ -45,4 +45,4 @@ export function CodeBlock({
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
-}
+})

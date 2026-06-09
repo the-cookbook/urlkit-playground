@@ -1,3 +1,4 @@
+import * as React from "react"
 import type {
   ArrayFormat,
   BuildControlState,
@@ -31,32 +32,40 @@ export function BuildPanel({
   onControlChange,
   onOptionsChange,
 }: BuildPanelProps) {
-  const input = capture(() => createBuildStateInput(controls))
+  const input = React.useMemo(
+    () => capture(() => createBuildStateInput(controls)),
+    [controls]
+  )
   const buildInput =
     input instanceof Error ? undefined : (input as BuildStateInput)
-  const results: readonly DemoResult[] =
-    input instanceof Error || !buildInput
-      ? [{ label: "build input", value: input }]
-      : [
-          {
-            label: "build input",
-            value: buildInput,
-          },
-          {
-            label: "ArticleUrl.build(input, options)",
-            value: capture(() => contract.build(buildInput, options)),
-          },
-          {
-            label: "ArticleUrl.buildSearch(input.search, options)",
-            value: capture(() =>
-              contract.buildSearch(buildInput.search, options)
-            ),
-          },
-          {
-            label: "ArticleUrl.buildHash(input.hash, options)",
-            value: capture(() => contract.buildHash(buildInput.hash, options)),
-          },
-        ]
+  const results = React.useMemo<readonly DemoResult[]>(
+    () =>
+      input instanceof Error || !buildInput
+        ? [{ label: "build input", value: input }]
+        : [
+            {
+              label: "build input",
+              value: buildInput,
+            },
+            {
+              label: "ArticleUrl.build(input, options)",
+              value: capture(() => contract.build(buildInput, options)),
+            },
+            {
+              label: "ArticleUrl.buildSearch(input.search, options)",
+              value: capture(() =>
+                contract.buildSearch(buildInput.search, options)
+              ),
+            },
+            {
+              label: "ArticleUrl.buildHash(input.hash, options)",
+              value: capture(() =>
+                contract.buildHash(buildInput.hash, options)
+              ),
+            },
+          ],
+    [buildInput, contract, input, options]
+  )
 
   return (
     <section className="rounded-2xl border bg-card p-4 shadow-sm lg:p-5">

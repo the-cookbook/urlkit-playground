@@ -5,6 +5,7 @@ export type HighlightLanguage = "typescript" | "json"
 type ShikiHighlighter = Awaited<ReturnType<typeof createHighlighter>>
 
 let highlighterPromise: Promise<ShikiHighlighter> | undefined
+const highlightedHtmlCache = new Map<string, Promise<string> | string>()
 
 export function getHighlighter(): Promise<ShikiHighlighter> {
   if (!highlighterPromise) {
@@ -22,12 +23,31 @@ export async function highlightCode(
   theme: "dark" | "light",
   lang: HighlightLanguage = "typescript"
 ) {
-  const highlighter = await getHighlighter()
+  const cacheKey = `${theme}:${lang}:${source}`
+  const cachedHtml = highlightedHtmlCache.get(cacheKey)
 
-  return highlighter.codeToHtml(source, {
-    lang,
-    theme: theme === "light" ? "light-plus" : "nord",
-  })
+  if (cachedHtml) {
+    return cachedHtml
+  }
+
+  const highlightedHtmlPromise = getHighlighter().then((highlighter) =>
+    highlighter.codeToHtml(source, {
+      lang,
+      theme: theme === "light" ? "light-plus" : "nord",
+    })
+  )
+
+  highlightedHtmlCache.set(cacheKey, highlightedHtmlPromise)
+
+  try {
+    const highlightedHtml = await highlightedHtmlPromise
+    highlightedHtmlCache.set(cacheKey, highlightedHtml)
+
+    return highlightedHtml
+  } catch (error) {
+    highlightedHtmlCache.delete(cacheKey)
+    throw error
+  }
 }
 
 export function escapeHtml(value: string) {

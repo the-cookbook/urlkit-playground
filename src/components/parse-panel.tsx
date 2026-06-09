@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { UnknownSearchBehavior } from "@cookbook/urlkit"
 import { capture } from "@/lib/format"
 import { Field, Select, Textarea } from "./form-controls"
@@ -36,20 +37,23 @@ export function ParsePanel({
   onOptionsChange,
   onScenarioSelect,
 }: ParsePanelProps) {
-  const results: readonly DemoResult[] = [
-    {
-      label: "ArticleUrl.safeParse(input, options)",
-      value: capture(() => contract.safeParse(input, options)),
-    },
-    {
-      label: "ArticleUrl.match(input, options)",
-      value: capture(() => contract.match(input, options)),
-    },
-    {
-      label: "ArticleUrl.parse(input, options)",
-      value: capture(() => contract.parse(input, options)),
-    },
-  ]
+  const results = React.useMemo<readonly DemoResult[]>(
+    () => [
+      {
+        label: "ArticleUrl.safeParse(input, options)",
+        value: capture(() => contract.safeParse(input, options)),
+      },
+      {
+        label: "ArticleUrl.match(input, options)",
+        value: capture(() => contract.match(input, options)),
+      },
+      {
+        label: "ArticleUrl.parse(input, options)",
+        value: capture(() => contract.parse(input, options)),
+      },
+    ],
+    [contract, input, options]
+  )
 
   return (
     <section className="rounded-2xl border bg-card p-4 shadow-sm lg:p-5">

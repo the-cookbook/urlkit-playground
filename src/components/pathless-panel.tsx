@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { UnknownSearchBehavior } from "@cookbook/urlkit"
 
 import { filterExamples, pathlessContractCode } from "@/data/copies"
@@ -47,68 +48,80 @@ export function PathlessPanel({
   onOptionsChange,
   onBuildChange,
 }: PathlessPanelProps) {
-  const parseResults: readonly DemoResult[] = [
-    {
-      label: "ProductFilters.safeParse(input, options)",
-      value: capture(() => ProductFilters.safeParse(input, options)),
-    },
-    {
-      label: "ProductFilters.match(input, options)",
-      value: capture(() => ProductFilters.match(input, options)),
-    },
-    {
-      label: "ProductFilters.parse(input, options)",
-      value: capture(() => ProductFilters.parse(input, options)),
-    },
-    {
-      label:
-        "ProductFilters.match('/products?categories=electronics&tab=settings', { unknownSearch: 'error' })",
-      value: capture(() =>
-        ProductFilters.match("/products?categories=electronics&tab=settings", {
-          unknownSearch: "error",
-        })
-      ),
-    },
-  ]
-  const search = {
-    categories: splitCsv(categories),
-    sortBy: sortBy === "none" ? undefined : sortBy,
-  }
-  const buildOptions = { arrayFormat }
-  const buildResults: readonly DemoResult[] = [
-    {
-      label: "ProductFilters.build({ search, hash }, options)",
-      value: capture(() =>
-        ProductFilters.build(
-          { search, hash: hash === "none" ? undefined : hash },
-          buildOptions
-        )
-      ),
-    },
-    {
-      label: "ProductFilters.build({ pathname, search, hash }, options)",
-      value: capture(() =>
-        ProductFilters.build(
-          {
-            pathname,
-            search,
-            hash: hash === "none" ? undefined : hash,
-          },
-          buildOptions
-        )
-      ),
-    },
-    {
-      label: "ProductFilters.buildSearch(search, options)",
-      value: capture(() => ProductFilters.buildSearch(search, buildOptions)),
-    },
-    {
-      label: "ProductFilters.buildHash(hash)",
-      value: capture(() =>
-        ProductFilters.buildHash(hash === "none" ? undefined : hash)
-      ),
-    },
-  ]
+  const parseResults = React.useMemo<readonly DemoResult[]>(
+    () => [
+      {
+        label: "ProductFilters.safeParse(input, options)",
+        value: capture(() => ProductFilters.safeParse(input, options)),
+      },
+      {
+        label: "ProductFilters.match(input, options)",
+        value: capture(() => ProductFilters.match(input, options)),
+      },
+      {
+        label: "ProductFilters.parse(input, options)",
+        value: capture(() => ProductFilters.parse(input, options)),
+      },
+      {
+        label:
+          "ProductFilters.match('/products?categories=electronics&tab=settings', { unknownSearch: 'error' })",
+        value: capture(() =>
+          ProductFilters.match(
+            "/products?categories=electronics&tab=settings",
+            {
+              unknownSearch: "error",
+            }
+          )
+        ),
+      },
+    ],
+    [input, options]
+  )
+  const search = React.useMemo(
+    () => ({
+      categories: splitCsv(categories),
+      sortBy: sortBy === "none" ? undefined : sortBy,
+    }),
+    [categories, sortBy]
+  )
+  const buildOptions = React.useMemo(() => ({ arrayFormat }), [arrayFormat])
+  const buildResults = React.useMemo<readonly DemoResult[]>(
+    () => [
+      {
+        label: "ProductFilters.build({ search, hash }, options)",
+        value: capture(() =>
+          ProductFilters.build(
+            { search, hash: hash === "none" ? undefined : hash },
+            buildOptions
+          )
+        ),
+      },
+      {
+        label: "ProductFilters.build({ pathname, search, hash }, options)",
+        value: capture(() =>
+          ProductFilters.build(
+            {
+              pathname,
+              search,
+              hash: hash === "none" ? undefined : hash,
+            },
+            buildOptions
+          )
+        ),
+      },
+      {
+        label: "ProductFilters.buildSearch(search, options)",
+        value: capture(() => ProductFilters.buildSearch(search, buildOptions)),
+      },
+      {
+        label: "ProductFilters.buildHash(hash)",
+        value: capture(() =>
+          ProductFilters.buildHash(hash === "none" ? undefined : hash)
+        ),
+      },
+    ],
+    [buildOptions, hash, pathname, search]
+  )
 
   return (
     <section className="rounded-2xl border bg-card p-4 shadow-sm lg:p-5">

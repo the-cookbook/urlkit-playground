@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { capture } from "@/lib/format"
@@ -50,20 +51,42 @@ export function HelpersPanel({
   onTabChange,
   onHelperKeysChange,
 }: HelpersPanelProps) {
-  const patch = createHelperPatch(meta)
-  const omitKeys = parseKeyList(helperKeys.omitSearch)
-  const pickKeys = parseKeyList(helperKeys.pickSearch)
-  const result = createHelperResult(
-    contract,
-    selectedTab,
-    input,
-    parseOptions,
-    buildOptions,
-    patch,
-    {
+  const patch = React.useMemo(() => createHelperPatch(meta), [meta])
+  const omitKeys = React.useMemo(
+    () => parseKeyList(helperKeys.omitSearch),
+    [helperKeys.omitSearch]
+  )
+  const pickKeys = React.useMemo(
+    () => parseKeyList(helperKeys.pickSearch),
+    [helperKeys.pickSearch]
+  )
+  const helperParsedKeys = React.useMemo(
+    () => ({
       omitSearch: omitKeys,
       pickSearch: pickKeys,
-    }
+    }),
+    [omitKeys, pickKeys]
+  )
+  const result = React.useMemo(
+    () =>
+      createHelperResult(
+        contract,
+        selectedTab,
+        input,
+        parseOptions,
+        buildOptions,
+        patch,
+        helperParsedKeys
+      ),
+    [
+      buildOptions,
+      contract,
+      helperParsedKeys,
+      input,
+      parseOptions,
+      patch,
+      selectedTab,
+    ]
   )
 
   return (
