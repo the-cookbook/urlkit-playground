@@ -1,21 +1,5 @@
-# React + TypeScript + Vite + shadcn/ui
+# URLKit Playground
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+Interactive development playground for `@cookbook/urlkit`.
 
-## Adding components
-
-To add components to your app, run the following command:
-
-```bash
-npx shadcn@latest add button
-```
-
-This will place the ui components in the `src/components` directory.
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button"
-```
+This playground is used to manually exercise URL contracts, validate public API behavior, and demonstrate real usage patterns without coupling URLKit core to any router, framework, or UI runtime.

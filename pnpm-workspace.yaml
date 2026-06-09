@@ -2,4 +2,10 @@ packages: []
 
 allowBuilds:
   esbuild: true
-  msw: false
+  msw: true
+
+minimumReleaseAgeExclude:
+  - "@cookbook/urlkit@2.0.0"
+  - '@cookbook/pathkit@0.4.0'
+  - '@cookbook/pathkit@0.4.1'
+  - '@cookbook/urlkit@2.0.1'

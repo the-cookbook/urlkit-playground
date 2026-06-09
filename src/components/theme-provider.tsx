@@ -1,18 +1,22 @@
+"use client"
+
 /* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
 type ResolvedTheme = "dark" | "light"
 
-type ThemeProviderProps = {
+interface ThemeProviderProps {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
   disableTransitionOnChange?: boolean
 }
 
-type ThemeProviderState = {
+interface ThemeProviderState {
   theme: Theme
+  resolvedTheme: ResolvedTheme
+  systemTheme: ResolvedTheme
   setTheme: (theme: Theme) => void
 }
 
@@ -24,7 +28,7 @@ const ThemeProviderContext = React.createContext<
 >(undefined)
 
 function isTheme(value: string | null): value is Theme {
-  if (value === null) {
+  if (!value) {
     return false
   }
 
@@ -32,6 +36,10 @@ function isTheme(value: string | null): value is Theme {
 }
 
 function getSystemTheme(): ResolvedTheme {
+  if (typeof window === "undefined") {
+    return "light"
+  }
+
   if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
     return "dark"
   }
@@ -39,17 +47,34 @@ function getSystemTheme(): ResolvedTheme {
   return "light"
 }
 
+function getStoredTheme(storageKey: string, defaultTheme: Theme): Theme {
+  if (typeof window === "undefined") {
+    return defaultTheme
+  }
+
+  const storedTheme = localStorage.getItem(storageKey)
+
+  if (isTheme(storedTheme)) {
+    return storedTheme
+  }
+
+  return defaultTheme
+}
+
 function disableTransitionsTemporarily() {
   const style = document.createElement("style")
+
   style.appendChild(
     document.createTextNode(
       "*,*::before,*::after{-webkit-transition:none!important;transition:none!important}"
     )
   )
+
   document.head.appendChild(style)
 
   return () => {
     window.getComputedStyle(document.body)
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         style.remove()
@@ -63,6 +88,10 @@ function isEditableTarget(target: EventTarget | null) {
     return false
   }
 
+  if (target.closest(".monaco-editor")) {
+    return true
+  }
+
   if (target.isContentEditable) {
     return true
   }
@@ -70,6 +99,7 @@ function isEditableTarget(target: EventTarget | null) {
   const editableParent = target.closest(
     "input, textarea, select, [contenteditable='true']"
   )
+
   if (editableParent) {
     return true
   }
@@ -82,16 +112,16 @@ export function ThemeProvider({
   defaultTheme = "system",
   storageKey = "theme",
   disableTransitionOnChange = true,
-  ...props
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey)
-    if (isTheme(storedTheme)) {
-      return storedTheme
-    }
+  const [theme, setThemeState] = React.useState<Theme>(() =>
+    getStoredTheme(storageKey, defaultTheme)
+  )
 
-    return defaultTheme
-  })
+  const [systemTheme, setSystemTheme] = React.useState<ResolvedTheme>(() =>
+    getSystemTheme()
+  )
+
+  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme
 
   const setTheme = React.useCallback(
     (nextTheme: Theme) => {
@@ -102,16 +132,15 @@ export function ThemeProvider({
   )
 
   const applyTheme = React.useCallback(
-    (nextTheme: Theme) => {
+    (nextTheme: ResolvedTheme) => {
       const root = document.documentElement
-      const resolvedTheme =
-        nextTheme === "system" ? getSystemTheme() : nextTheme
+
       const restoreTransitions = disableTransitionOnChange
         ? disableTransitionsTemporarily()
         : null
 
       root.classList.remove("light", "dark")
-      root.classList.add(resolvedTheme)
+      root.classList.add(nextTheme)
 
       if (restoreTransitions) {
         restoreTransitions()
@@ -121,23 +150,24 @@ export function ThemeProvider({
   )
 
   React.useEffect(() => {
-    applyTheme(theme)
+    applyTheme(resolvedTheme)
+  }, [resolvedTheme, applyTheme])
 
-    if (theme !== "system") {
-      return undefined
-    }
-
+  React.useEffect(() => {
     const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
+
     const handleChange = () => {
-      applyTheme("system")
+      setSystemTheme(mediaQuery.matches ? "dark" : "light")
     }
+
+    handleChange()
 
     mediaQuery.addEventListener("change", handleChange)
 
     return () => {
       mediaQuery.removeEventListener("change", handleChange)
     }
-  }, [theme, applyTheme])
+  }, [])
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -158,16 +188,17 @@ export function ThemeProvider({
       }
 
       setThemeState((currentTheme) => {
-        const nextTheme =
+        const nextTheme: Theme =
           currentTheme === "dark"
             ? "light"
             : currentTheme === "light"
               ? "dark"
-              : getSystemTheme() === "dark"
+              : systemTheme === "dark"
                 ? "light"
                 : "dark"
 
         localStorage.setItem(storageKey, nextTheme)
+
         return nextTheme
       })
     }
@@ -177,7 +208,7 @@ export function ThemeProvider({
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [storageKey])
+  }, [storageKey, systemTheme])
 
   React.useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -207,13 +238,15 @@ export function ThemeProvider({
   const value = React.useMemo(
     () => ({
       theme,
+      resolvedTheme,
+      systemTheme,
       setTheme,
     }),
-    [theme, setTheme]
+    [theme, resolvedTheme, systemTheme, setTheme]
   )
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext.Provider value={value}>
       {children}
     </ThemeProviderContext.Provider>
   )
