@@ -14,7 +14,10 @@ export function Browser({
 }>) {
   return (
     <div
-      className={cn("overflow-hidden rounded-lg border bg-muted", className)}
+      className={cn(
+        "overflow-hidden rounded-xl border bg-muted drop-shadow-xl",
+        className
+      )}
     >
       <div className="mx-auto h-full w-full transition-[max-width] duration-200">
         <div className="flex w-full items-center p-3">
